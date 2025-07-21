@@ -1,23 +1,24 @@
-import logo from './logo.svg';
 import './App.css';
+import logo from './LOGO_COLORIDO.png';
+import React, { useState } from 'react';
+import Index from './main/index';
+import Login from './main/login';
 
 function App() {
+  const [logado, setLogado] = useState(false);
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <header>
+            <img src={logo} alt="Logo da Empresa" className="logo" />
+            <h1>Sistema de Portaria</h1>
+        </header>
+      {!logado ? (
+
+        <Login onLogin={() => setLogado(true)} />
+      ) : (
+        <Index />
+      )}
     </div>
   );
 }
