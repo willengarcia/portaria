@@ -7,6 +7,9 @@ import Portaria from './body/portaria';
 import Relatorio from './body/relatorio';
 function Index() {
     const [tela, setTela] = useState('portaria');
+      function sair() {
+        window.location.reload();
+      }
   return (
     <div className="index">
         <nav id="menuNav">
@@ -15,6 +18,7 @@ function Index() {
             <button onClick={() => setTela('porteiro')}>Cadastro Porteiro</button>
             <button onClick={() => setTela('relatorio')}>Relatório</button>
             <button onClick={() => setTela('entradaSaida')}>Entrada/Saída</button>
+            <button onClick={sair}>Sair</button>
         </nav>
         {tela === 'porteiro' && <CadastroPorteiro />}
         {tela === 'portaria' && <Portaria />}
