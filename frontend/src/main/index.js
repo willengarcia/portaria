@@ -17,7 +17,7 @@ function Index() {
             <button onClick={() => setTela('fabrica')}>Cadastro Fábrica</button>
             <button onClick={() => setTela('porteiro')}>Cadastro Porteiro</button>
             <button onClick={() => setTela('relatorio')}>Relatório</button>
-            <button onClick={() => setTela('entradaSaida')}>Entrada/Saída</button>
+            <button onClick={() => setTela('entradaSaidaJIFHE')}>Entrada/Saída</button>
             <button onClick={sair}>Sair</button>
         </nav>
         {tela === 'porteiro' && <CadastroPorteiro />}

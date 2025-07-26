@@ -28,7 +28,7 @@ function Relatorio() {
     });
 
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/relatorio?${params.toString()}`);
+      const res = await fetch(`${process.env.VITE_API_URL}/relatorio?${params.toString()}`);
       const dados = await res.json();
 
       if (!Array.isArray(dados) || dados.length === 0) {

@@ -50,7 +50,7 @@ function Portaria() {
   useEffect(() => {
     async function getFabrica() {
       try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/fabrica`);
+        const res = await fetch(`${process.env.VITE_API_URL}/fabrica`);
         const fabricas = await res.json();
         setFabricas(fabricas);
       } catch (error) {
@@ -83,7 +83,7 @@ function Portaria() {
     if (imagem) formData.append('imagem', imagem);
     formData.append('observacao', observacao);
 
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/portaria`, {
+    const res = await fetch(`${process.env.VITE_API_URL}/portaria`, {
       method: 'POST',
       body: formData
     });
@@ -114,7 +114,7 @@ function Portaria() {
         return;
       }
       try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/motoristas?busca=${motorista}`);
+        const res = await fetch(`${process.env.VITE_API_URL}/motoristas?busca=${motorista}`);
         const lista = await res.json();
         setMotoristas(Array.isArray(lista) ? lista : []);
       } catch (error) {

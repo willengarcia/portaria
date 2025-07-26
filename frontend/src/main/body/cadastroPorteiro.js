@@ -6,7 +6,7 @@ async function cadastrarPorteiro(event) {
     cpf: form.cpf_porteiro.value,
     senha: form.senha_porteiro.value,
   };
-  const res = await fetch(`${process.env.REACT_APP_API_URL}/cadastro-porteiro`, {
+  const res = await fetch(`${process.env.VITE_API_URL}/cadastro-porteiro`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(dados),

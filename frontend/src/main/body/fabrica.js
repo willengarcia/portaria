@@ -7,7 +7,7 @@ async function cadastrarFabrica(event) {
     nome: form.nomeFabrica.value,
     estado: form.estadoFabrica.value,
   };
-  const res = await fetch(`${process.env.REACT_APP_API_URL}/fabrica`, {
+  const res = await fetch(`${process.env.VITE_API_URL}/fabrica`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(dados),
