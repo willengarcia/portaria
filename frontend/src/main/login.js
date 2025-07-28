@@ -24,7 +24,8 @@ function Login({ onLogin }) {
       const data = await res.json();
 
       if (data.mensagem === 'Login realizado com sucesso.') {
-        if (onLogin) onLogin();
+        localStorage.setItem('token', data.token);
+        if (onLogin) onLogin(data.usuario);
       } else {
         setErro('Email ou senha inválidos');
       }

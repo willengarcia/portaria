@@ -6,6 +6,7 @@ import Login from './main/login';
 
 function App() {
   const [logado, setLogado] = useState(false);
+  const [usuario, setUsuario] = useState(null);
 
   return (
     <div className="App">
@@ -15,9 +16,12 @@ function App() {
         </header>
       {!logado ? (
 
-        <Login onLogin={() => setLogado(true)} />
+        <Login onLogin={(usuarioLogado) => {
+        setUsuario(usuarioLogado);
+        setLogado(true);
+      }} />
       ) : (
-        <Index />
+        <Index usuario={usuario} />
       )}
     </div>
   );

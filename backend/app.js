@@ -15,10 +15,11 @@ const portariaRoutes = require('./routes/post/portariaRoutes');
 const getfabricaRoutes = require('./routes/get/getFabricaRoutes');
 const getportariaRoutes = require('./routes/get/getPortariaRoutes');
 const getFindportariaRoutes = require('./routes/get/getFindPortariaRoutes');
-
+const getmotoristaRoutes = require('./routes/get/getMotoristaRoutes');
+const getCarrosRoutes = require('./routes/get/getCarrosRoutes');
 
 app.use(cors({
-  origin: 'http://localhost:3001' 
+  origin: '*' 
 }));
 
 app.use(express.json());
@@ -30,10 +31,11 @@ app.use('/api', fabricaRoutes);
 app.use('/api', motoristaRoutes); 
 app.use('/api', carroRoutes);
 app.use('/api', portariaRoutes);
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api', getfabricaRoutes);
 app.use('/api', getportariaRoutes);
 app.use('/api', getFindportariaRoutes);
+app.use('/api', getmotoristaRoutes);
+app.use('/api', getCarrosRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+
 
 function validarCPF(cpf) {
   cpf = cpf.replace(/[^\d]+/g, '');
@@ -23,7 +25,7 @@ function validarRG(rg) {
 
 function getDataHoraAtual() {
   const agora = new Date();
-  const pad = n => n.toString().padStart(2, '0');
+  const pad = (n) => n.toString().padStart(2, '0');
   return (
     agora.getFullYear() + '-' +
     pad(agora.getMonth() + 1) + '-' +
@@ -34,199 +36,311 @@ function getDataHoraAtual() {
 }
 
 function Portaria() {
+  const [pessoas, setPessoas] = useState([]);
+  const [placaDigitada, setPlacaDigitada] = useState('');
+  const [carroManualId, setCarroManualId] = useState('');
+
+
   const [fabricas, setFabricas] = useState([]);
+  const [motoristas, setMotoristas] = useState([]);
+  const [carros, setCarros] = useState([]);
+
+  const [tipoEntrada, setTipoEntrada] = useState('pessoa');
   const [dataHora, setDataHora] = useState(getDataHoraAtual());
-  const [placa, setPlaca] = useState('');
-  const [motorista, setMotorista] = useState('');
-  const [tipoDocumento, setTipoDocumento] = useState('cpf');
-  const [documento, setDocumento] = useState('');
-  const [movimento, setMovimento] = useState('entrada');
-  const [fabrica, setFabrica] = useState('');
-  const [imagem, setImagem] = useState(null);
+  const [fabricaId, setFabricaId] = useState('');
   const [observacao, setObservacao] = useState('');
 
-  const [motoristas, setMotoristas] = useState([]);
+
+  const [motoristaId, setMotoristaId] = useState('');
+  const [carroId, setCarroId] = useState('');
+
+  const [nomePessoa, setNomePessoa] = useState('');
+  const [tipoDocumento, setTipoDocumento] = useState('cpf');
+  const [documento, setDocumento] = useState('');
+
+  const [imagem, setImagem] = useState(null);
 
   useEffect(() => {
-    async function getFabrica() {
+    async function carregarDadosIniciais() {
       try {
-        const res = await fetch(`${process.env.VITE_API_URL}/fabrica`);
-        const fabricas = await res.json();
-        setFabricas(fabricas);
+        const [resFabricas, resMotoristas, resCarros] = await Promise.all([
+          axios.get(`${process.env.REACT_APP_API_URL}/allFabricas`),
+          axios.get(`${process.env.REACT_APP_API_URL}/motoristas`),
+          axios.get(`${process.env.REACT_APP_API_URL}/carros`),
+        ]);
+
+        setFabricas(resFabricas.data);
+        setMotoristas(resMotoristas.data);
+        setCarros(resCarros.data);
+        setPessoas(resMotoristas.data);
+
       } catch (error) {
-        console.error('Erro ao carregar fábricas:', error);
+        console.error('❌ Erro ao carregar dados iniciais:', error);
+
+        if (error.response) {
+          console.error('🟥 Status:', error.response.status);
+          console.error('🟥 Dados do erro:', error.response.data);
+        } else if (error.request) {
+          console.error('🟧 Nenhuma resposta recebida:', error.request);
+        } else {
+          console.error('🟨 Erro na configuração da requisição:', error.message);
+        }
+
+        alert('Não foi possível carregar os dados do servidor. Veja o console.');
       }
     }
-    getFabrica();
-  }, []);
 
-  async function cadastrarPortaria(event) {
+    carregarDadosIniciais();
+  }, []);
+  const resetarFormulario = () => {
+    setDataHora(getDataHoraAtual());
+    setFabricaId('');
+    setObservacao('');
+    setMotoristaId('');
+    setCarroId('');
+    setNomePessoa('');
+    setDocumento('');
+    setTipoDocumento('cpf');
+  };
+
+  async function registrarEntrada(event) {
     event.preventDefault();
 
-    if (tipoDocumento === 'cpf' && !validarCPF(documento)) {
-      alert('CPF inválido!');
-      return;
-    }
-    if (tipoDocumento === 'rg' && !validarRG(documento)) {
-      alert('RG inválido!');
-      return;
-    }
+    const payload = {
+      status: 0,
+      data_hora_entrada: dataHora,
+      data_hora_saida: null,
+      fabrica_id: fabricaId,
+      motorista_id: null,
+      carro_id: null,
+      observacao: observacao,
+    };
 
-    const formData = new FormData();
-    formData.append('dataHora', dataHora);
-    formData.append('placa', placa);
-    formData.append('motorista', motorista);
-    formData.append('tipoDocumento', tipoDocumento);
-    formData.append('documento', documento);
-    formData.append('movimento', movimento);
-    formData.append('fabrica', fabrica);
-    if (imagem) formData.append('imagem', imagem);
-    formData.append('observacao', observacao);
-
-    const res = await fetch(`${process.env.VITE_API_URL}/portaria`, {
-      method: 'POST',
-      body: formData
-    });
-    const dados = await res.json();
-    alert(dados.sucesso ? 'Registro salvo com sucesso!' : 'Erro ao salvar');
-    setDataHora(getDataHoraAtual());
-    setPlaca('');
-    setMotorista('');
-    setTipoDocumento('cpf');
-    setDocumento('');
-    setMovimento('entrada');
-    setFabrica('');
-    setImagem(null);
-    setObservacao('');
-  }
-
-  function preencherDocumento() {
-    const motoristaSelecionado = motoristas.find(m => m.nome === motorista);
-    if (motoristaSelecionado) {
-      setDocumento(motoristaSelecionado.documento);
-      setTipoDocumento(motoristaSelecionado.tipo_documento || 'cpf');
-    }
-  }
-  useEffect(() => {
-    async function buscarMotoristas() {
-      if (motorista.length < 2) {
-        setMotoristas([]);
+    if (tipoEntrada === 'motorista') {
+      if (!motoristaId) {
+        alert('É necessário selecionar o motorista.');
         return;
       }
-      try {
-        const res = await fetch(`${process.env.VITE_API_URL}/motoristas?busca=${motorista}`);
-        const lista = await res.json();
-        setMotoristas(Array.isArray(lista) ? lista : []);
-      } catch (error) {
-        setMotoristas([]);
+
+      payload.motorista_id = motoristaId;
+
+      // Aqui faz sentido priorizar o carro da placa digitada
+      if (carroManualId) {
+        payload.carro_id = carroManualId;
+      } else if (carroId) {
+        payload.carro_id = carroId;
+      } else {
+        alert('Para motorista, é necessário preencher o carro.');
+        return;
       }
+    } else {
+      if (!nomePessoa || !documento) {
+        alert('Para pessoa, é necessário preencher o nome e o documento.');
+        return;
+      }
+      if (tipoDocumento === 'cpf' && !validarCPF(documento)) {
+        alert('CPF inválido!');
+        return;
+      }
+      if (tipoDocumento === 'rg' && !validarRG(documento)) {
+        alert('RG inválido!');
+        return;
+      }
+
+      const pessoaEncontrada = pessoas.find(p => p.nome.toLowerCase() === nomePessoa.toLowerCase());
+      if (pessoaEncontrada) {
+        payload.motorista_id = pessoaEncontrada.id;
+      }
+
+      payload.observacao = `Pessoa: ${nomePessoa} | Documento (${tipoDocumento.toUpperCase()}): ${documento}. ${observacao}`;
     }
-    buscarMotoristas();
-  }, [motorista]);
+
+    try {
+      const formData = new FormData();
+      for (const key in payload) {
+        if (payload[key] !== null && payload[key] !== '') {
+          formData.append(key, payload[key]);
+        }
+      }
+
+      if (imagem) {
+        formData.append('imagem', imagem);
+      }
+
+      await axios.post(`${process.env.REACT_APP_API_URL}/portaria`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      alert('Registro de entrada salvo com sucesso!');
+      resetarFormulario();
+      setImagem(null);
+    } catch (error) {
+      console.error('Erro ao registrar entrada:', error);
+      alert(error?.response?.data?.message || 'Erro ao registrar entrada.');
+    }
+  }
   return (
-    <>
-      <section id="portaria">
-        <h2>Cadastro de Portaria</h2>
-        <form id="formPortaria" onSubmit={cadastrarPortaria}>
-          <label>Data e Hora:</label>
-          <input
-            type="datetime-local"
-            id="dataHora"
-            name="dataHora"
-            required
-            readOnly
-            value={dataHora}
-          />
-          <label>Placa do Carro:</label>
-          <input
-            type="text"
-            name="placa"
-            id="placa"
-            required
-            placeholder="AAA0A00 ou ABC1234"
-            maxLength="8"
-            value={placa}
-            onChange={e => setPlaca(e.target.value)}
-          />
-          <label htmlFor="motorista">Motorista:</label>
-          <input
-            list="lista-motoristas"
-            id="motorista"
-            name="motorista"
-            autoComplete="off"
-            value={motorista}
-            onChange={e => setMotorista(e.target.value)}
-            onBlur={preencherDocumento}          />
-          <datalist id="lista-motoristas">
-            {motoristas.map(m => (
-              <option key={m.id} value={m.nome}>
-                {m.nome} - {m.documento}
-              </option>
-            ))}
-          </datalist>
-          <label>Tipo de Documento:</label>
-          <select
-            id="tipoDocumento"
-            name="tipoDocumento"
-            required
-            value={tipoDocumento}
-            onChange={e => setTipoDocumento(e.target.value)}
-          >
-            <option value="cpf">CPF</option>
-            <option value="rg">RG</option>
-          </select>
-          <label>Documento:</label>
-          <input
-            type="text"
-            name="documento"
-            id="documento"
-            required
-            value={documento}
-            onChange={e => setDocumento(e.target.value)}
-          />
-          <label>Entrada ou Saída:</label>
-          <select
-            name="movimento"
-            required
-            value={movimento}
-            onChange={e => setMovimento(e.target.value)}
-          >
-            <option value="entrada">Entrada</option>
-            <option value="saida">Saída</option>
-          </select>
-          <label>Fábrica:</label>
-          <select
-            name="fabrica"
-            id="fabricaSelect"
-            required
-            value={fabrica}
-            onChange={e => setFabrica(e.target.value)}
-          >
-            <option value="">Selecione</option>
-            {fabricas.map(fabrica => (
-              <option key={fabrica.id} value={fabrica.id}>
-                {fabrica.nome} - {fabrica.estado}
-              </option>
-            ))}
-          </select>
-          <label>Imagem (opcional):</label>
-          <input
-            type="file"
-            accept="image/*"
-            name="imagem"
-            onChange={e => setImagem(e.target.files[0])}
-          />
-          <label>Observação:</label>
-          <textarea
-            name="observacao"
-            rows="3"
-            value={observacao}
-            onChange={e => setObservacao(e.target.value)}
-          ></textarea>
-          <button className="submit-btn" type="submit">Registrar</button>
-        </form>
-      </section>
-    </>
+    <section id="portaria">
+      <h2>Registrar Entrada na Portaria</h2>
+      <form id="formPortaria" onSubmit={registrarEntrada}>
+        <label>Data e Hora da Entrada:</label>
+        <input
+          type="datetime-local"
+          value={dataHora}
+          readOnly
+          required
+        />
+
+        <label>Tipo de Entrada:</label>
+        <div className="radio-group">
+            <label>
+                <input 
+                    type="radio" 
+                    name="tipoEntrada" 
+                    value="pessoa" 
+                    checked={tipoEntrada === 'pessoa'}
+                    onChange={(e) => setTipoEntrada(e.target.value)}
+                /> Pessoa / Visitante
+            </label>
+            <label>
+                <input 
+                    type="radio" 
+                    name="tipoEntrada" 
+                    value="motorista" 
+                    checked={tipoEntrada === 'motorista'}
+                    onChange={(e) => setTipoEntrada(e.target.value)}
+                /> Motorista
+            </label>
+        </div>
+        {tipoEntrada === 'motorista' && (
+          <>
+            <label htmlFor="motoristaId">Motorista:</label>
+            <select
+              id="motoristaId"
+              value={motoristaId}
+              onChange={(e) => setMotoristaId(e.target.value)}
+              required
+            >
+              <option value="">Selecione um motorista</option>
+              {motoristas.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.nome} - {m.cnh}
+                </option>
+              ))}
+            </select>
+
+            <label htmlFor="carroId">Carro:</label>
+            <label htmlFor="placaCarro">Placa do Carro (opcional):</label>
+            <input
+              type="text"
+              id="placaCarro"
+              value={placaDigitada}
+              onChange={(e) => {
+                const placa = e.target.value.toUpperCase();
+                setPlacaDigitada(placa);
+                const carroEncontrado = carros.find(c => c.placa.toUpperCase() === placa);
+                if (carroEncontrado) {
+                  setCarroManualId(carroEncontrado.id);
+                } else {
+                  setCarroManualId('');
+                }
+              }}
+              list="listaPlacas"
+              placeholder="Digite a placa do carro"
+            />
+            <datalist id="listaPlacas">
+              {carros.map(c => (
+                <option key={c.id} value={c.placa} />
+              ))}
+            </datalist>
+
+          </>
+        )}
+        {tipoEntrada === 'pessoa' && (
+          <>
+            <label htmlFor="nomePessoa">Nome da Pessoa:</label>
+            <label htmlFor="nomePessoa">Nome da Pessoa:</label>
+            <input
+              type="text"
+              id="nomePessoa"
+              value={nomePessoa}
+              onChange={(e) => {
+                const nomeDigitado = e.target.value;
+                setNomePessoa(nomeDigitado);
+                const pessoaEncontrada = pessoas.find(p => p.nome.toLowerCase() === nomeDigitado.toLowerCase());
+                if (pessoaEncontrada) {
+                  setMotoristaId(pessoaEncontrada.id);
+                } else {
+                  setMotoristaId('');
+                }
+              }}
+              list="listaNomes"
+              placeholder="Digite o nome completo"
+              required
+            />
+            <datalist id="listaNomes">
+              {pessoas.map(p => (
+                <option key={p.id} value={p.nome} />
+              ))}
+            </datalist>
+            <label>Tipo de Documento:</label>
+            <select
+                value={tipoDocumento}
+                onChange={(e) => setTipoDocumento(e.target.value)}
+                required
+            >
+                <option value="cpf">CPF</option>
+                <option value="rg">RG</option>
+            </select>
+            <label>Número do Documento:</label>
+            <input
+                type="text"
+                value={documento}
+                onChange={(e) => setDocumento(e.target.value)}
+                placeholder="Digite o número do documento"
+                required
+            />
+          </>
+        )}
+        <label htmlFor="fabricaId">Fábrica de Destino:</label>
+        <select
+          id="fabricaId"
+          value={fabricaId}
+          onChange={(e) => setFabricaId(e.target.value)}
+          required
+        >
+          <option value="">Selecione a fábrica</option>
+          {fabricas.map((f) => (
+            <option key={f.id} value={f.id}>
+              {f.nome} - {f.estado}
+            </option>
+          ))}
+        </select>
+
+        <label htmlFor="imagem">Foto da Entrada (opcional):</label>
+        <input
+          type="file"
+          id="imagem"
+          accept="image/*"
+          capture="environment"
+          onChange={(e) => setImagem(e.target.files[0])}
+        />
+        <label htmlFor="observacao">Observação:</label>
+        <textarea
+          id="observacao"
+          rows="3"
+          value={observacao}
+          onChange={(e) => setObservacao(e.target.value)}
+          placeholder="(Opcional) Adicione uma observação relevante."
+        ></textarea>
+
+        <button className="submit-btn" type="submit">
+          Registrar Entrada
+        </button>
+      </form>
+    </section>
   );
 }
 
