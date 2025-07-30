@@ -8,6 +8,7 @@ exports.criarRegistro = async ({
   motorista_id,
   fabrica_id,
   observacao,
+  tipo_entrada,
   imagem_link
 }) => {
   const query = `
@@ -19,9 +20,10 @@ exports.criarRegistro = async ({
       motorista_id,
       fabrica_id,
       observacao,
+      tipo_entrada,
       imagem_link
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     RETURNING *;
   `;
 
@@ -33,6 +35,7 @@ exports.criarRegistro = async ({
     motorista_id,
     fabrica_id,
     observacao,
+    tipo_entrada,
     imagem_link || null
   ];
 

@@ -1,9 +1,8 @@
 const db = require('../../config/db');
 
-async function listarMotoristas() {
-  const query = 'SELECT * FROM Motorista ORDER BY id';
-  const result = await db.query(query);
-  return result.rows;
+async function listarMotoristas(documento) {
+  const res = await db.query('SELECT * FROM motorista WHERE documento = $1', [documento]);
+  return res.rows[0];
 }
 
 module.exports = {

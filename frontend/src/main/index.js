@@ -18,7 +18,11 @@ function Index({ usuario }) {
   return (
     <div className="index">
       <nav id="menuNav">
-        <button onClick={() => setTela('portaria')}>Cadastro Portaria</button>
+        <button onClick={() => setTela('portaria')}>Entrada</button>
+
+        {(tipo === 'administrador' || tipo === 'comum') && (
+          <button onClick={() => setTela('entradaSaida')}>Saída</button>
+        )}
 
         {(tipo === 'administrador' || tipo !== 'comum') && (
           <button onClick={() => setTela('fabrica')}>Cadastro Fábrica</button>
@@ -29,10 +33,6 @@ function Index({ usuario }) {
         )}
 
         <button onClick={() => setTela('relatorio')}>Relatório</button>
-
-        {(tipo === 'administrador' || tipo === 'comum') && (
-          <button onClick={() => setTela('entradaSaida')}>Entrada/Saída</button>
-        )}
 
         <button onClick={sair}>Sair</button>
       </nav>

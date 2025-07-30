@@ -17,6 +17,10 @@ const getportariaRoutes = require('./routes/get/getPortariaRoutes');
 const getFindportariaRoutes = require('./routes/get/getFindPortariaRoutes');
 const getmotoristaRoutes = require('./routes/get/getMotoristaRoutes');
 const getCarrosRoutes = require('./routes/get/getCarrosRoutes');
+const getPedestres = require('./routes/get/getPedestresRoutes')
+const pedestres = require('./routes/post/pedestresRoutes')
+const getRelatorioRoutes = require('./routes/get/getRelatorioRoutes');
+const getFindNomeMotoristaRoutes = require('./routes/get/getFindNomeMotoristaRoutes');
 
 app.use(cors({
   origin: '*' 
@@ -36,8 +40,12 @@ app.use('/api', getportariaRoutes);
 app.use('/api', getFindportariaRoutes);
 app.use('/api', getmotoristaRoutes);
 app.use('/api', getCarrosRoutes);
+app.use('/api', getPedestres);
+app.use('/api', pedestres);
+app.use('/api', getRelatorioRoutes);
+app.use('/api', getFindNomeMotoristaRoutes);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
